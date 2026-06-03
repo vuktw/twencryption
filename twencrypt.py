@@ -34,7 +34,6 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.hashes import SHA256
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
-
 # --------------------------------------------------------------------------
 # SJCL-compatible AES-CCM encryption
 # --------------------------------------------------------------------------
@@ -43,6 +42,7 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 # length fits in L bytes. The `cryptography` library's AESCCM hardcodes
 # L = 15 - len(nonce), which caps payloads to ~64 KiB when nonce is 13
 # bytes, so we implement CCM by hand on top of raw AES-ECB.
+
 
 def _aes_ecb_block(key: bytes, block: bytes) -> bytes:
     """Encrypt one 16-byte block with AES (the CCM primitive)."""
@@ -121,9 +121,9 @@ def _sjcl_ccm_encrypt(
 
 
 # Defaults match what TiddlyWiki itself produces.
-_DEFAULT_KS = 256       # AES key size, bits
-_DEFAULT_ITER = 10000   # PBKDF2 iterations
-_DEFAULT_TS = 64        # tag size, bits
+_DEFAULT_KS = 256  # AES key size, bits
+_DEFAULT_ITER = 10000  # PBKDF2 iterations
+_DEFAULT_TS = 64  # tag size, bits
 _DEFAULT_SALT_BYTES = 8
 _DEFAULT_IV_BYTES = 16
 
@@ -276,7 +276,9 @@ def main(argv: list[str] | None = None) -> int:
         description="Encrypt a folder of .tid files into a TiddlyWiki HTML file."
     )
     parser.add_argument("input", type=Path, help="Folder containing .tid files")
-    parser.add_argument("template", type=Path, help="Encrypted TiddlyWiki HTML to use as template")
+    parser.add_argument(
+        "template", type=Path, help="Encrypted TiddlyWiki HTML to use as template"
+    )
     parser.add_argument("output", type=Path, help="Output HTML file (must not exist)")
     args = parser.parse_args(argv)
 

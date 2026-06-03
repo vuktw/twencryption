@@ -33,7 +33,6 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.hashes import SHA256
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
-
 # --------------------------------------------------------------------------
 # SJCL-compatible AES-CCM decryption
 # --------------------------------------------------------------------------
@@ -42,6 +41,7 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 # length fits in L bytes. The `cryptography` library's AESCCM hardcodes
 # L = 15 - len(nonce), which caps payloads to ~64 KiB when nonce is 13
 # bytes, so we implement CCM by hand on top of raw AES-ECB.
+
 
 def _aes_ecb_block(key: bytes, block: bytes) -> bytes:
     """Encrypt one 16-byte block with AES (the CCM primitive)."""
@@ -168,17 +168,25 @@ def title_to_filename(title: str) -> str:
     replaced with a single '_' per character. Runs of underscores are
     NOT collapsed, so the original structure is preserved.
     """
-    safe = re.sub(r'[^A-Za-z0-9 \-_.$]', '_', title)
+    safe = re.sub(r"[^A-Za-z0-9 \-_.$]", "_", title)
     # Avoid filenames that are problematic on some filesystems.
-    if safe in ('', '.', '..'):
-        safe = 'untitled'
+    if safe in ("", ".", ".."):
+        safe = "untitled"
     return safe + ".tid"
 
 
 # Fields that always go in the header block, in this order. Anything else
 # (and `text`) is also a header field, but we order the well-known ones
 # first for readability, then alphabetize the rest.
-_HEADER_PRIORITY = ["title", "creator", "modifier", "created", "modified", "type", "tags"]
+_HEADER_PRIORITY = [
+    "title",
+    "creator",
+    "modifier",
+    "created",
+    "modified",
+    "type",
+    "tags",
+]
 
 
 def tiddler_to_tid(tid: dict[str, Any]) -> str:
@@ -198,7 +206,11 @@ def tiddler_to_tid(tid: dict[str, Any]) -> str:
         v = v.replace("\r\n", " ").replace("\n", " ").replace("\r", " ")
         lines.append(f"{k}: {v}")
 
-    return "\n".join(lines) + "\n\n" + (text if isinstance(text, str) else json.dumps(text))
+    return (
+        "\n".join(lines)
+        + "\n\n"
+        + (text if isinstance(text, str) else json.dumps(text))
+    )
 
 
 def classify(title: str, tid: dict[str, Any]) -> str:
@@ -218,7 +230,9 @@ def main(argv: list[str] | None = None) -> int:
         description="Decrypt an encrypted TiddlyWiki and write its tiddlers as .tid files."
     )
     parser.add_argument("input", type=Path, help="Path to encrypted TiddlyWiki .html")
-    parser.add_argument("output", type=Path, help="Output folder (must not exist or be empty)")
+    parser.add_argument(
+        "output", type=Path, help="Output folder (must not exist or be empty)"
+    )
     args = parser.parse_args(argv)
 
     if not args.input.is_file():
@@ -228,7 +242,10 @@ def main(argv: list[str] | None = None) -> int:
     # Output folder rule: must not exist OR exist and be empty.
     if args.output.exists():
         if not args.output.is_dir():
-            print(f"error: output path exists and is not a directory: {args.output}", file=sys.stderr)
+            print(
+                f"error: output path exists and is not a directory: {args.output}",
+                file=sys.stderr,
+            )
             return 2
         if any(args.output.iterdir()):
             print(f"error: output folder is not empty: {args.output}", file=sys.stderr)
