@@ -31,6 +31,7 @@ from typing import Any
 
 import time
 from datetime import timedelta
+import threading
 
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.hashes import SHA256
@@ -270,12 +271,34 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if args.verbose:
             decryption_start_time = time.perf_counter()
-        plaintext = sjcl_decrypt(password, blob)
-        if args.verbose:
+
+            result_container = []
+            def worker():
+                result = sjcl_decrypt(password, blob)
+                result_container.append(result)
+
+            background_thread = threading.Thread(target=worker)
+            start_thread_time = time.time()
+            background_thread.start()
+
+            while background_thread.is_alive():
+                elapsed_time = time.time() - start_thread_time
+                minutes = int(elapsed_time // 60)
+                seconds = int(elapsed_time % 60)
+                print(f"\rDecrypting - time elapsed: {minutes:02d}:{seconds:02d}", end="", flush=True)
+                time.sleep(0.001)
+
+            background_thread.join()
+            print("\nDecryption finished")
+            plaintext = result_container[0]
+
             decryption_end_time = time.perf_counter()
             decryption_elapsed_seconds = decryption_end_time - decryption_start_time
             decryption_formatted_time = str(timedelta(seconds=int(decryption_elapsed_seconds)))
             print(f"Decryption time: {decryption_formatted_time}")
+        else:
+            plaintext = sjcl_decrypt(password, blob)
+
     except ValueError as e:
         print(f"error: {e}", file=sys.stderr)
         return 1
