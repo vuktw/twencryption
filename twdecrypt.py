@@ -268,7 +268,14 @@ def main(argv: list[str] | None = None) -> int:
     password = getpass.getpass("Password: ")
 
     try:
+        if args.verbose:
+            decryption_start_time = time.perf_counter()
         plaintext = sjcl_decrypt(password, blob)
+        if args.verbose:
+            decryption_end_time = time.perf_counter()
+            decryption_elapsed_seconds = decryption_end_time - decryption_start_time
+            decryption_formatted_time = str(timedelta(seconds=int(decryption_elapsed_seconds)))
+            print(f"Decryption time: {decryption_formatted_time}")
     except ValueError as e:
         print(f"error: {e}", file=sys.stderr)
         return 1
