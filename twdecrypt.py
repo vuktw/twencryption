@@ -332,7 +332,6 @@ def main(argv: list[str] | None = None) -> int:
         if args.verbose:
             total_count += 1
             print(f"\rProcessed {total_count} tiddler(s)", end="", flush=True)
-            time.sleep(1)
 
     if args.verbose:
         print("\n")
