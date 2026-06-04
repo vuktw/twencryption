@@ -29,6 +29,9 @@ import sys
 from pathlib import Path
 from typing import Any
 
+import time
+from datetime import timedelta
+
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.hashes import SHA256
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
@@ -233,6 +236,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "output", type=Path, help="Output folder (must not exist or be empty)"
     )
+    parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output")
     args = parser.parse_args(argv)
 
     if not args.input.is_file():
@@ -251,6 +255,8 @@ def main(argv: list[str] | None = None) -> int:
             print(f"error: output folder is not empty: {args.output}", file=sys.stderr)
             return 2
 
+    if args.verbose:
+        start_time = time.perf_counter()
     html_text = args.input.read_text(encoding="utf-8")
     try:
         blob = extract_encrypted_blob(html_text)
@@ -327,6 +333,12 @@ def main(argv: list[str] | None = None) -> int:
         f"Wrote {counts['user']} user, {counts['system']} system, "
         f"{counts['plugin']} plugin tiddlers to {args.output}"
     )
+    if args.verbose:
+        end_time = time.perf_counter()
+        elapsed_seconds = end_time - start_time
+        formatted_time = str(timedelta(seconds=int(elapsed_seconds)))
+        print(f"Execution time: {formatted_time}")
+
     return 0
 
 
