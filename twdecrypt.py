@@ -293,6 +293,7 @@ def main(argv: list[str] | None = None) -> int:
     (args.output / "plugin").mkdir(exist_ok=True)
 
     counts = {"user": 0, "system": 0, "plugin": 0}
+    total_count = 0
     # Track filenames per destination directory to disambiguate collisions
     # caused by the underscore substitution.
     used: dict[Path, set[str]] = {}
@@ -328,7 +329,13 @@ def main(argv: list[str] | None = None) -> int:
         dest = dest_dir / filename
         dest.write_text(tiddler_to_tid(tid), encoding="utf-8")
         counts[kind] += 1
+        if args.verbose:
+            total_count += 1
+            print(f"\rProcessed {total_count} tiddler(s)", end="", flush=True)
+            time.sleep(1)
 
+    if args.verbose:
+        print("\n")
     print(
         f"Wrote {counts['user']} user, {counts['system']} system, "
         f"{counts['plugin']} plugin tiddlers to {args.output}"
