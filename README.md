@@ -98,6 +98,12 @@ python3 twdecrypt.py mywiki.html ./unpacked
 python3 twencrypt.py ./unpacked mywiki.html mywiki-new.html
 ```
 
+### Verbose outout
+
+Both `twdecrypt.py` and `twencrypt.py` support an optional `-v | --verbose`
+parameter, which makes them display additional info about execution when
+enabled. This is useful for processing big wiki files on old slow hardware.
+
 ## How it works
 
 TiddlyWiki encrypts its store using [SJCL](https://github.com/bitwiseshiftleft/sjcl):
