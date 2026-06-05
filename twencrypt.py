@@ -209,7 +209,7 @@ def filename_to_title(filename: str) -> str:
 # --------------------------------------------------------------------------
 # Folder scan
 # --------------------------------------------------------------------------
-def collect_tiddlers(folder: Path) -> dict[str, dict[str, Any]]:
+def collect_tiddlers(folder: Path, verbose: bool) -> dict[str, dict[str, Any]]:
     """
     Walk <folder>, parse every *.tid file into a tiddler dict, and return
     a {title: tiddler} mapping. Files in system/ and plugin/ subfolders
@@ -224,6 +224,7 @@ def collect_tiddlers(folder: Path) -> dict[str, dict[str, Any]]:
         if subdir.is_dir():
             candidates.extend(subdir.glob("*.tid"))
 
+    total_count = 0
     for path in candidates:
         try:
             raw = path.read_text(encoding="utf-8")
@@ -241,6 +242,12 @@ def collect_tiddlers(folder: Path) -> dict[str, dict[str, Any]]:
             )
         store[title] = tid
         seen_files[title] = path
+        if verbose:
+            total_count += 1
+            print(f"\rProcessed {total_count} tiddler(s)", end="", flush=True)
+
+    if verbose:
+        print("\n")
 
     return store
 
@@ -301,7 +308,7 @@ def main(argv: list[str] | None = None) -> int:
     # Parse tiddlers and read template up front, so any structural error
     # surfaces before the user types a password.
     try:
-        store = collect_tiddlers(args.input)
+        store = collect_tiddlers(args.input, args.verbose)
     except ValueError as e:
         print(f"error: {e}", file=sys.stderr)
         return 1
