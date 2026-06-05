@@ -341,7 +341,14 @@ def main(argv: list[str] | None = None) -> int:
     plaintext = json.dumps(store, separators=(",", ":"), ensure_ascii=False)
 
     try:
+        if args.verbose:
+            encryption_start_time = time.perf_counter()
         blob = sjcl_encrypt(password, plaintext)
+        if args.verbose:
+            encryption_end_time = time.perf_counter()
+            encryption_elapsed_seconds = encryption_end_time - encryption_start_time
+            encryption_formatted_time = str(timedelta(seconds=int(encryption_elapsed_seconds)))
+            print(f"Encryption time: {encryption_formatted_time}")
     finally:
         del password
 
