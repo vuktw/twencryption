@@ -37,6 +37,8 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.hashes import SHA256
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
+import twlib
+
 # --------------------------------------------------------------------------
 # SJCL-compatible AES-CCM decryption
 # --------------------------------------------------------------------------
@@ -228,8 +230,6 @@ def classify(title: str, tid: dict[str, Any]) -> str:
 
 def decrypt(args):
     """wrapper of logic past arguments parsing"""
-    if args.verbose:
-        start_time = time.perf_counter()
     html_text = args.input.read_text(encoding="utf-8")
     try:
         blob = extract_encrypted_blob(html_text)
@@ -241,36 +241,7 @@ def decrypt(args):
     password = getpass.getpass("Password: ")
 
     try:
-        if args.verbose:
-            decryption_start_time = time.perf_counter()
-
-            result_container = []
-            def worker():
-                result = sjcl_decrypt(password, blob)
-                result_container.append(result)
-
-            background_thread = threading.Thread(target=worker)
-            start_thread_time = time.time()
-            background_thread.start()
-
-            while background_thread.is_alive():
-                elapsed_time = time.time() - start_thread_time
-                minutes = int(elapsed_time // 60)
-                seconds = int(elapsed_time % 60)
-                print(f"\rDecrypting - time elapsed: {minutes:02d}:{seconds:02d}", end="", flush=True)
-                time.sleep(0.001)
-
-            background_thread.join()
-            print("\nDecryption finished")
-            plaintext = result_container[0]
-
-            decryption_end_time = time.perf_counter()
-            decryption_elapsed_seconds = decryption_end_time - decryption_start_time
-            decryption_formatted_time = str(timedelta(seconds=int(decryption_elapsed_seconds)))
-            print(f"Decryption time: {decryption_formatted_time}")
-        else:
-            plaintext = sjcl_decrypt(password, blob)
-
+        plaintext = sjcl_decrypt(password, blob)
     except ValueError as e:
         print(f"error: {e}", file=sys.stderr)
         return 1
@@ -341,11 +312,6 @@ def decrypt(args):
         f"Wrote {counts['user']} user, {counts['system']} system, "
         f"{counts['plugin']} plugin tiddlers to {args.output}"
     )
-    if args.verbose:
-        end_time = time.perf_counter()
-        elapsed_seconds = end_time - start_time
-        formatted_time = str(timedelta(seconds=int(elapsed_seconds)))
-        print(f"Execution time: {formatted_time}")
 
 # --------------------------------------------------------------------------
 # CLI
@@ -377,6 +343,9 @@ def main(argv: list[str] | None = None) -> int:
             print(f"error: output folder is not empty: {args.output}", file=sys.stderr)
             return 2
 
+    global decrypt
+    if args.verbose:
+        decrypt = twlib.runtime(decrypt)
     decrypt(args)
 
     return 0

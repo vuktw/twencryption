@@ -38,6 +38,8 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.hashes import SHA256
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
+import twlib
+
 # --------------------------------------------------------------------------
 # SJCL-compatible AES-CCM encryption
 # --------------------------------------------------------------------------
@@ -318,35 +320,7 @@ def encrypt(args):
     plaintext = json.dumps(store, separators=(",", ":"), ensure_ascii=False)
 
     try:
-        if args.verbose:
-            encryption_start_time = time.perf_counter()
-
-            result_container = []
-            def worker():
-                result = sjcl_encrypt(password, plaintext)
-                result_container.append(result)
-
-            background_thread = threading.Thread(target=worker)
-            start_thread_time = time.time()
-            background_thread.start()
-
-            while background_thread.is_alive():
-                elapsed_time = time.time() - start_thread_time
-                minutes = int(elapsed_time // 60)
-                seconds = int(elapsed_time % 60)
-                print(f"\rEncrypting - time elapsed: {minutes:02d}:{seconds:02d}", end="", flush=True)
-                time.sleep(0.001)
-
-            background_thread.join()
-            print("\nEncryption finished")
-            blob = result_container[0]
-
-            encryption_end_time = time.perf_counter()
-            encryption_elapsed_seconds = encryption_end_time - encryption_start_time
-            encryption_formatted_time = str(timedelta(seconds=int(encryption_elapsed_seconds)))
-            print(f"Encryption time: {encryption_formatted_time}")
-        else:
-            blob = sjcl_encrypt(password, plaintext)
+        blob = sjcl_encrypt(password, plaintext)
 
     finally:
         del password
@@ -357,13 +331,6 @@ def encrypt(args):
     tmp = args.output.with_suffix(args.output.suffix + ".tmp")
     tmp.write_text(new_html, encoding="utf-8")
     tmp.replace(args.output)
-
-    print(f"Encrypted {len(store)} tiddlers to {args.output}")
-    if args.verbose:
-        end_time = time.perf_counter()
-        elapsed_seconds = end_time - start_time
-        formatted_time = str(timedelta(seconds=int(elapsed_seconds)))
-        print(f"Execution time: {formatted_time}")
 
 
 # --------------------------------------------------------------------------
@@ -391,6 +358,9 @@ def main(argv: list[str] | None = None) -> int:
         print(f"error: output file already exists: {args.output}", file=sys.stderr)
         return 2
 
+    global encrypt
+    if args.verbose:
+        encrypt = twlib.runtime(encrypt)
     encrypt(args)
     return 0
 
