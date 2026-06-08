@@ -226,36 +226,8 @@ def classify(title: str, tid: dict[str, Any]) -> str:
     return "user"
 
 
-# --------------------------------------------------------------------------
-# CLI
-# --------------------------------------------------------------------------
-def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(
-        description="Decrypt an encrypted TiddlyWiki and write its tiddlers as .tid files."
-    )
-    parser.add_argument("input", type=Path, help="Path to encrypted TiddlyWiki .html")
-    parser.add_argument(
-        "output", type=Path, help="Output folder (must not exist or be empty)"
-    )
-    parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output")
-    args = parser.parse_args(argv)
-
-    if not args.input.is_file():
-        print(f"error: input file not found: {args.input}", file=sys.stderr)
-        return 2
-
-    # Output folder rule: must not exist OR exist and be empty.
-    if args.output.exists():
-        if not args.output.is_dir():
-            print(
-                f"error: output path exists and is not a directory: {args.output}",
-                file=sys.stderr,
-            )
-            return 2
-        if any(args.output.iterdir()):
-            print(f"error: output folder is not empty: {args.output}", file=sys.stderr)
-            return 2
-
+def decrypt(args):
+    """wrapper of logic past arguments parsing"""
     if args.verbose:
         start_time = time.perf_counter()
     html_text = args.input.read_text(encoding="utf-8")
@@ -374,6 +346,38 @@ def main(argv: list[str] | None = None) -> int:
         elapsed_seconds = end_time - start_time
         formatted_time = str(timedelta(seconds=int(elapsed_seconds)))
         print(f"Execution time: {formatted_time}")
+
+# --------------------------------------------------------------------------
+# CLI
+# --------------------------------------------------------------------------
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(
+        description="Decrypt an encrypted TiddlyWiki and write its tiddlers as .tid files."
+    )
+    parser.add_argument("input", type=Path, help="Path to encrypted TiddlyWiki .html")
+    parser.add_argument(
+        "output", type=Path, help="Output folder (must not exist or be empty)"
+    )
+    parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output")
+    args = parser.parse_args(argv)
+
+    if not args.input.is_file():
+        print(f"error: input file not found: {args.input}", file=sys.stderr)
+        return 2
+
+    # Output folder rule: must not exist OR exist and be empty.
+    if args.output.exists():
+        if not args.output.is_dir():
+            print(
+                f"error: output path exists and is not a directory: {args.output}",
+                file=sys.stderr,
+            )
+            return 2
+        if any(args.output.iterdir()):
+            print(f"error: output folder is not empty: {args.output}", file=sys.stderr)
+            return 2
+
+    decrypt(args)
 
     return 0
 
