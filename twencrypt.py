@@ -278,32 +278,8 @@ def render_into_template(template_html: str, blob: dict[str, Any]) -> str:
         )
     return new_html
 
-
-# --------------------------------------------------------------------------
-# CLI
-# --------------------------------------------------------------------------
-def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(
-        description="Encrypt a folder of .tid files into a TiddlyWiki HTML file."
-    )
-    parser.add_argument("input", type=Path, help="Folder containing .tid files")
-    parser.add_argument(
-        "template", type=Path, help="Encrypted TiddlyWiki HTML to use as template"
-    )
-    parser.add_argument("output", type=Path, help="Output HTML file (must not exist)")
-    parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output")
-    args = parser.parse_args(argv)
-
-    if not args.input.is_dir():
-        print(f"error: input folder does not exist: {args.input}", file=sys.stderr)
-        return 2
-    if not args.template.is_file():
-        print(f"error: template file not found: {args.template}", file=sys.stderr)
-        return 2
-    if args.output.exists():
-        print(f"error: output file already exists: {args.output}", file=sys.stderr)
-        return 2
-
+def encrypt(args):
+    """wrapper of logic past arguments parsing"""
     if args.verbose:
         start_time = time.perf_counter()
     # Parse tiddlers and read template up front, so any structural error
@@ -388,6 +364,34 @@ def main(argv: list[str] | None = None) -> int:
         elapsed_seconds = end_time - start_time
         formatted_time = str(timedelta(seconds=int(elapsed_seconds)))
         print(f"Execution time: {formatted_time}")
+
+
+# --------------------------------------------------------------------------
+# CLI
+# --------------------------------------------------------------------------
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(
+        description="Encrypt a folder of .tid files into a TiddlyWiki HTML file."
+    )
+    parser.add_argument("input", type=Path, help="Folder containing .tid files")
+    parser.add_argument(
+        "template", type=Path, help="Encrypted TiddlyWiki HTML to use as template"
+    )
+    parser.add_argument("output", type=Path, help="Output HTML file (must not exist)")
+    parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output")
+    args = parser.parse_args(argv)
+
+    if not args.input.is_dir():
+        print(f"error: input folder does not exist: {args.input}", file=sys.stderr)
+        return 2
+    if not args.template.is_file():
+        print(f"error: template file not found: {args.template}", file=sys.stderr)
+        return 2
+    if args.output.exists():
+        print(f"error: output file already exists: {args.output}", file=sys.stderr)
+        return 2
+
+    encrypt(args)
     return 0
 
 
